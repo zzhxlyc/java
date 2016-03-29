@@ -20,6 +20,7 @@ public class 照片缩放 {
 		timer.start();
 		int num = 0;
 		try {
+			@SuppressWarnings("resource")
 			Scanner scan = new Scanner(System.in);
 			System.out.println("input the source folder path");
 			String source = scan.nextLine();

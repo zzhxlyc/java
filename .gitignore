@@ -4,3 +4,15 @@
 .DS_Store
 bin
 .settings
+Ant
+Test
+lib
+wap
+x_jar
+x_jee
+z_hibernate_annotation
+z_hibernate_xml
+z_spring_annotation
+z_spring_mvc
+z_spring_xml
+z_struts2
