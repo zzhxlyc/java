@@ -1,0 +1,2 @@
+Class类本身继承自Object，自身也有Class类对应，但就是本身（此时Class类的多态指向java.lang.Class）
+	clazzObj.getClass()		//java.lang.Class 取得的是Class类的Class对象, 也就是本身

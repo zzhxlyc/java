@@ -1,0 +1,18 @@
+第一次标记：	找到没有被标记为live的对象, 待回收
+
+第二次标记：	待回收对象若没有覆盖Object.finalize()方法或者已经被VM执行过这个方法, 则直接回收。
+			若覆盖了Object.finalize()且还未被执行, 则将对象放置到名为F-Queue的队列中, 
+			在稍后由VM建立的低优先级的Finalizer线程去执行, 只要在finalize()中将this赋给live的对象, 
+			则对象可避免被回收。同个对象的finalize()永远只会被执行一次, 即自救后第二次就没办法了
+
+Minor GC / Young GC		新生代的GC, 所以非常频繁, 回收速度也比较快
+Major / Full GC			老年代的GC, 比Minor GC慢10倍以上。当Minor GC时, VM检测每次转移到老年代
+						的平均大小是否大于老年代的剩余空间, 若大于则改为直接进行一次Full GC
+			
+大多数情况下对象在新生代Eden区中分配, 当Eden区没有足够内存进行分配VM发起一次Minor GC,将Eden中对象移到老年代中
+	
+大对象频繁创建消灭对Minor GC来说代价非常大, 建议直接分配到老年代中。
+	
+长期存活的对象将进入老年代中
+	通过对象年龄（Age）计数器实现, 从Eden区出生的对象被移动到Survivor区, 然后每经过一次Minor GC就为Age+1, 
+		增加到15岁（默认）就移到老年代中

@@ -1,0 +1,47 @@
+JVM所管理的内存包括的运行时数据区：
+	线程单独	虚拟机栈(VM Stack), 本地方法栈(Native Method Stack), 程序计数器(PC)
+	线程共享	方法区(Method Area, permanet generation), 堆(Heap)
+			Direct Memory
+
+程序计数器(PC)
+	很小一块内存区域, 调用Java方法时记录位置, 调用Native方法时为空
+
+虚拟机栈(VM Stack)	调用Java方法时的栈 -Xss设置栈大小
+	如果线程请求的栈深度大于VM所允许的深度, 抛出StackOverflowError
+	如果VM栈可以动态扩展, 扩展无法申请到足够内存抛出OutOfMemoryError
+	存放有	8种基本类型, 对象引用(Reference类型, 是指针或是句柄)和返回地址类型
+		指针	栈中的指针直接指向对象, 然后对象中还需要一个指针指向方法区中的代码片段
+			对象访问速度快
+		句柄	栈中的指针指向一个句柄, 句柄中包含对象本身的指针和对象代码的指针
+			对象访问需二次索引; GC时候移动对象不需要改变栈中的Reference
+	
+	栈帧(Stack Frame) 每次进入一个函数调用, 用一个栈帧来封装数据
+		本地变量表、操作数栈、动态连接、方法返回地址、一些额外附加信息
+	
+		本地变量表
+			以变量槽(Variable Slot)为最小单位，每个Slot可以存放32位的基础数据类型、引用或返回地址类型，64位按高位在前存储
+			通过索引定位的方式使用局部变量表，索引值范围从0开始到最大Slot数量。非静态方法中的this一般为0位索引
+			局部变量表是GC ROOTs的一部分
+			局部变量没有加载Class时候的准备阶段和初始化阶段来初始化值, 所有必须代码中显式地初始化, 否则编译错误
+			
+		操作数栈		执行算术运算的栈，字节码指令出栈入栈操作的对象
+		
+		动态连接		多态方法（重写）需要动态连接
+		
+		方法返回地址
+			方法2种方式退出	遇到返回指令
+							遇到异常且没有被捕捉到（本方法的异常表中没有匹配的处理器）
+			若有返回值，将返回值压栈（操作数栈）
+	
+本地方法栈(Native Method Stack)	调用native method时候的栈
+
+方法区(Method Area)	存储代码的线程共享内存区域
+	也就是永久代 permanet generation
+	类信息, 常量(运行时常量池), 静态变量, JIT编译后的代码等数据
+
+堆
+	可细分为： 新生代(new generation)和老年代(tenured generation)	
+	再细分： Eden空间, From Survivor空间, To Survivor空间等
+	对象优先在新生代的Eden空间分配, 当Eden空间没有足够空间时发起一次Minor GC
+
+Direct Memory	不是VM运行时数据区的一部分, NIO中基于通道与缓冲区的I/O方式

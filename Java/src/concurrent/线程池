@@ -1,0 +1,6 @@
+线程池的size
+	Ncpu = CPU个数
+	Ucpu = CPU使用率
+	W/C  = 等待时间与计算时间的比率
+	
+	size = Ncpu * Ucpu * (1 + W/C)

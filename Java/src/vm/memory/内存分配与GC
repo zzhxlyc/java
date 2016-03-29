@@ -1,0 +1,32 @@
+分代收集（generational collection, 也是SUN VM使用的, J2SE1.2始）
+即将内存分为几个区域, 将不同生命周期的对象放在不同区域里:
+new generation新生代
+tenured generation老年代
+permanet generation持久代
+
+绝大部分的object被分配在new generation(生命周期短), 并且大部分的object在这里die。
+当new generation满了之后, 将引发minor collection。
+在minor collection后存活的object会被移动到tenured generation(生命周期比较长)。
+最后, tenured generation满之后触发Full GC
+Full GC会触发整个heap的回收, 包括回收new generation。
+perm gen区域比较稳定, 主要存放classloader、class信息。
+
+new generation有Eden, 2个Survivor区域(from和to)组成。使用了GC中标记复制的方法。
+其中一个Survivor区域一直是空的啊, 是Eden区域和另一个Survivor区域在下一次minor GC后活着的object的目的地。
+object在Survivor区域呆到一定时间(age到15)被复制直到转移到老年代区。
+
+内存申请过程
+•JVM会试图为相关Java对象在Eden中初始化一块内存区域；
+•当Eden空间足够时, 内存申请结束。否则到下一步；
+•JVM发动minor GC, 释放后若Eden空间仍然不足以放入新对象, 则试图将部分Eden中活跃对象放入Survivor区；
+•Survivor区被用来作为Eden及老年代的中间交换区域, 当老年代区空间足够时, Survivor区的对象会被移到老年代区, 
+	否则会被保留在Survivor区；
+•当老年代区空间不够时, JVM会在老年代区进行Major/Full GC；
+•完全垃圾收集后, 若Survivor及老年代区仍然无法存放从Eden复制过来的部分对象, 
+	导致JVM无法在Eden区为新对象创建内存区域, 则出现"Out of memory错误"；
+
+对象衰老过程
+新创建的对象的内存都分配自Eden。
+Minor GC的过程就是将Eden和在用From Survivor中的活对象copy到To Survivor中。
+对象在新生代里经历了一定次数(可以通过参数配置)的minor GC后, 就会被移到老年代中, 称为tenuring。
+

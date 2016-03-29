@@ -1,0 +1,40 @@
+synchronized锁
+出现异常，JVM会自动释放锁。
+
+ReentrantLock可重入锁
+提供了public ReentrantLock(boolean fair)的构造来设定非公平锁。
+出现异常，ReentrantLock锁不会被自动释放，一般解锁代码放到finally块中。
+
+ReentrantReadWriteLock读写锁
+
+Condition对象
+每一个Condition对象可以看做就是一个独立的锁, 只不过有自己的一套API
+
+公平锁和非公平锁
+公平锁保证在锁的等待队列里各个线程是公平的，不会存在插队状况，对锁的获取是FIFO
+非公平锁则不能保证，可能存在插队，实现代价比较小，性能比较高
+
+Spin Lock自旋锁
+当一个线程请求锁后的计算量比一次线程切换所需时间还短, 在等待锁的时候作线程切换是不划算的。
+自旋锁的作用，就是让线程遇到锁等待时先额外执行空循环（即自旋），这个过程中若线程获得了锁则继续执行免去了
+线程被挂起的操作, 若仍不能获得锁才会被挂起执行线程切换。
+JVM提供-XX:+UseSpinning参数开启自旋锁, -XX:PreBlockSpin参数设置自旋锁的等待次数
+
+Semaphore信号量
+锁就是互斥变量只能取值{0,1}, 信号量则可以取值更多，允许N个线程同时访问临界区
+
+基于比较并交换（Compare And Swap CAS算法）的无锁并发控制方法, CAS过程必须是原子的（由CPU指令实现）
+CAS算法过程：包含3个参数CAS(V, E, N)， V表示要更新的变量（volatile的）, E是预期值， N是要更新的值。
+	仅当V.value() == E时，才会将V的值设为N， 如果V的值不等于E说明有其他线程在干扰则当前线程什么
+	不做，最后CAS返回当前V的真实值
+java.util.concurrnet.atomic 包内有一组使用无锁算法实现的原子操作类
+以AtomicInteger为例，CAS算法工作原理：	用无限循环+CAS算法保证同步性
+public final int getAndSet(int newValue) {
+	for (;;) {
+	    int current = get();
+	    //当current通过volatile功能更新为最新值时, 就可以通过CAS去原子地设置新的值
+	    if (compareAndSet(current, newValue))
+	        return current;
+	}
+}
+JDK中的CAS算法由sun.misc.Unsafe类实现

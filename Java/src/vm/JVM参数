@@ -1,0 +1,56 @@
+栈：
+-Xss		栈大小
+
+堆：
+-Xms		堆最小值	JVM启动时申请的内存, 每次GC都会尽量释放内存回到这个状态, 这个数值小GC频繁
+-Xmx		堆最大值	超过这个值触发OutOfMemoryError异常
+			一般情况下设置，最大值 == 最小值，使堆存大小一致不变化
+-Xmn		新生代区大小值，一般为1/4到1/3的堆大小
+-XX:SurvivorRatio=8			设置新生代中Eden区与一个Survivor区的空间比例是8:1(默认为8)
+-XX:NewRatio=2	老年代/新生代的比例
+
+-XX:MaxDirectMemorySize		DirectMemory容量设定
+
+-XX:PermSize		初始方法区/永久代的内存大小
+-XX:MaxPermSize		限制方法区/永久代的最大值	一般64M-128M
+
+-XX:+HeapDumpOnOutOfMemoryError		出现OutOfMemoryError时Dump出当前内存堆转储快照
+
+GC:
+-Xnoclassgc					取消对类进行回收
+
+-Xloggc:file				GC日志保存到文件
+-XX:+PrintGC				打印GC粗略信息
+-XX:+PrintGCDetails			打印GC详细信息
+-XX:+PrintGCTimeStamps		打印GC发生时间和持续时间
+-XX:+TraceClassLoading		查看类的加载信息
+-XX:+TraceClassUnLoading	查看类的卸载信息
+-XX:ParallelGCThreads		设置GC的线程数
+-XX:MaxTenuringThreshold	设置在Survivor区中的Age限制, 超过这个值就移到老年代中, 默认15
+-XX:PretenureSizeThreshold	设置大于这个设置值的对象直接进去老年代中分配, 避免新生代中GC时被经常复制
+							只对串行GC器和新生代并行GC器有效
+
+JIT:
+-XX:CompileThreshold		函数调用超过这个数值使用JIT编译, client模式1500, server模式10000
+
+Log：
+-XX:+HeapDumpOnOutOfMemoryError	使用堆快照（堆Dump）,当发生内存不够时的日志
+-XX:HeadpDumpPath			设置堆快照的保存位置, Dump文件可由Visual VM等工具查看分析
+-XX:OnOutOfMemoryError=?		
+
+
+
+吞吐量优先案例		4G内存32核
+-Xmx3800m -Xms3800m -Xmn2g -Xss128k(线程栈小，可开的线程数就多) 
+-XX:UseParallelGC(新生代用并行GC器，吞吐量比较高) 
+-XX:ParallelGCThreads=20(通常情况下与CPIU核数相等，这边核数比较多就设置小一点) 
+-XX:+UseParallelOldGC(老年代也使用并行GC器)
+
+实时性要求高、降低停顿的案例
+-Xmx3550m -Xms3550m -Xmn2g -Xss128k
+-XX:ParallelGCThreads=20
+-XX:+UseConcMarkSweepGC(使用CMS回收器，关注系统停顿)
+-XX:+UseParNewGC(新生代用并行GC器，吞吐量比较高) 
+-XX:SurvivorRatio=8(Eden:from:to = 8:1:1)
+-XX:TargetSurvivorRatio=90(超过Survivor90%才转移到老年代, 默认50%)
+-XX:MaxTenuringThreshold=31(尽可能留在新生代)

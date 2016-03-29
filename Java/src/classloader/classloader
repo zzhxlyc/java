@@ -1,0 +1,18 @@
+Java的ClassLoader机制
+1.每个ClassLoader最好指定一个repository的概念, 这个ClassLoader只加载这个仓库范围里的Class
+	比如bootstrap就在/jre/lib, Tomcat的WebappClassLoader只在ContextPath下的/WEB-INF/classes和/lib
+	
+2.JVM采用父类委派模型, 每个ClassLoader.loadClass()时先调用parent.loadClass()，
+	这样保证不同的ClassLoader实现最终也会在同一个ClassLoader中加载某些公共类，比如rt.jar中的基础类
+	bootstrap									-加载rt.jar里的class
+	  -sun.misc.Launcher$ExtClassloader			-载入JAVA_HOME/jre/lib/ext/*.jar
+	    -sun.misc.Launcher$AppClassLoader		-载入JAVA_HOME/lib/tools.jar, 
+	    											CLASSPATH/*.class or CLASSPATH/*.jar
+	比如只要加载java.*存在的class一定会被委派到bootstrap去加载，保证不会存在不同的class
+	  
+3.同一子树结构中的ClassLoader可以从下往上访问加载的class, 上级不能访问下级, 平行级别的也不行。
+	以Tomcat的ClassLoader结构为例, 3个StandardClassLoader加载的类互相不能访问, 
+	所有的WebappClassLoader之间不能互相访问
+	
+4.不同ClassLoader加载的类处于不同的命名空间下(ClassLoader.package.ClassName)
+	有不同的Class类存在, 静态区域都是单独的

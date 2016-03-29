@@ -1,0 +1,22 @@
+多线程的设计模式
+
+生产者和消费者模式
+	缓冲队列
+
+Future模式
+	JDK内部有实现, java.concurrent.Future, java.concurrent.FutureTask等
+	详见jdk工程下的j.concurrent.Future
+	
+Master-Worker模式
+	Master线程用来分配任务, 每个Worker线程用来处理任务, Worker处理完任务交回给Master保留起来, 
+	有类似线程池的数据结构进行保存再使用。
+	
+	比如Tomcat中未使用线程池模式下, org.apache.tomcat.util.net.JIoEndpoint类中的
+	Acceptor和Worker
+
+Guarded Suspension模式
+	就是用一个队列缓存多个线程的请求, 慢慢去逐个地服务。降低系统瞬时负载, 提高稳定性。
+	就像ServerSocket的第二个参数。
+	
+不变模式
+	对于String、所有基础数据的封装类，都是不可变的，这对多线程来说天生友好

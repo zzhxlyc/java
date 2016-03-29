@@ -1,0 +1,34 @@
+采用类似C语言的结构体的伪结构来存储，只有2种数据类型：无符号数和表
+	无符号数属于基本的数据类型，以u1、u2、u3、u4来代表1、2、4、8个字节的无符号数
+		用来描述数字、索引引用、数量值、或者按照UTF-8编码构成的字符串值
+	表由多个无符号数或其他表作为数据项构成的复合数据类型，所有表习惯以'_info'结尾
+		用来描述有层次关系的复合结构的数据
+
+标准Class文件格式，从上往下顺序排布
+	魔数0xCAFEBABE
+	2个字节的此版本号，2个字节的主版本号
+		不同版本的JDK向前支持所有版本的Class文件，不支持以后的Class文件
+	常量池，跟一个u2表明常量个数constant_pool_count，然后跟constant_pool_count个常量项(下标从1开始)
+	（所以一个类里最多只能有65536个常量）
+		常量中存放：字面量(Literal)和符号引用(Symbolic Reference)
+			字面量		文本字符串、final变量
+			符号引用		类和接口的全限定名(Fully Qualified Name)
+						字段的名称和描述符(Descriptor)
+						方法的名称和描述符
+		每个常量都是一个表，共有11种结构不同的表数据结构
+	访问表示，类或接口、是否public、是否final(每一种使用一个bit表示，目前使用了8个)
+	类索引(u2)、父类索引(u2)、接口索引(u2->n + n * u2)
+	字段表
+	方法表
+
+属性表集合
+	Code属性					方法中的代码
+	Exceptions属性			列举方法中可能抛出的受查异常(throws后面列举的异常)
+	LocalVariableTable属性	局部变量表，非必需（影响到IDE的调试功能），Javac中-g:none或-g:vars来关闭或打开
+	LineNumberTable属性		源码行号与字节码行号，非必需（默认有，会影响到抛异常时堆栈打印行号），-g:lines打开
+	SourceFiles属性			记录生成这个Class文件的源码文件名称，非必需，-g:source打开
+	ConstantValue属性		自动为静态变量赋值，一般为final和static修饰的常量，且类型是基础类型或String
+	InnerClasses属性			内部类与宿主类的关联
+	Deprecated属性
+	Synthetic属性
+
