@@ -1,0 +1,63 @@
+Hadoop的ipc(进程间通信)就是以rpc(remote procedure call)形式实现, 
+ 在Java中可能叫rmi(remote method invocation)
+ 
+而这个rpc or rmi的实质就是：序列化 + socket通信 + Client端的动态代理：
+	客户端动态代理：
+		要实现rpc的类必须实现某个接口, 这样动态代理根据这个接口创造出一个代理类, 代码中好像和调用
+		本地方法并无区别, 实质InvocationHandler中会发起一次Socket到Server端, 得到结果后再返回
+	
+	NIO的异步socket：
+		Server端建立NIO的ServerSocket, Client端建立NIO的Socket。
+		Client端将调用参数用Hadoop的序列化机制通过socket传送到Server端, Server端反序列化后通过
+			反射调用获得结果后, 再通过序列化机制和socket传回Client端
+		Client端收到调用结果
+		
+Server端：
+	RPC.getServer()
+		new Server(), 参数为RPC的具体方法实现类、Socket地址和端口、Hadoop配置信息、hanlders线程数
+	server.start()
+		responder.start();
+			Responder, Server的静态内部类, 通过NIO的写事件处理写回Client端; 只有一个线程
+			
+    	listener.start();
+    		Listener, Server的静态内部类, 作为ServerSocket; Reader线程数量由配置决定
+    			构造：new出ipc.server.read.threadpool.size个Listener的静态内部类Reader, 用JDK
+    			内置线程池运行这些Reader来从Listener中读取信息
+    				Reader通过NIO的读事件, 调用server.readAndProcess()
+    					调用server.processOneRpc() -> processData()
+    						反序列化出参数, 然后new Server.Call(), 加入到同步队列callQueue中
+    						
+    	hanlders[handlerCount].each().start();	线程数量由RPC.getServer()参数决定
+    		Handler, Server的静态内部类, 处理真正过程调用
+	    		从同步队列callQueue中获取Call实例, 调用RPC.Server.call()方法得到结果实例, 
+	    		通过setupResponse()交给Responder
+
+Client端：
+	RPC.getProxy()
+		Proxy.newProxyInstance(..., new Invoker(), ...)
+			invoker.remoteId = new ConnectionId()
+			invoker.client = CLIENTS.getClient(conf, factory);	//一个socktFactroy一个client
+		proxy.getProtocolVersion()  //与服务器一次通信, 检查版本
+		
+	proxy.method() -> invoker.invoke()
+		client.call(new Invocation(method, args))
+			Call call = new Call(invocation);
+			Connection connection = getConnection(remoteId, call);	//remoteId->conn
+				connection.setupIOstreams();
+					connection.setupConnection();
+						connection.socket = socketFactory.createSocket();
+						socket绑定网络地址
+						NetUtils.connect(this.socket, server, 20000);	//进行连接
+					connection.start()  //启动接受结果线程
+			connection.sendParam(call);
+			while(!call.done) call.wait()	//同步机制, 等待call.done
+			
+	connection.run() //接收到结果
+		connection.receiveResponse()
+			Writable value = ReflectionUtils.newInstance(valueClass, conf);
+			call.setValue(value);
+				call.done = true;
+      			call.notify();			//这里的同步机制
+			calls.remove(this call);
+	    		
+	    		

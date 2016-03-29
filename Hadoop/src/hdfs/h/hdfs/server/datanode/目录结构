@@ -1,0 +1,7 @@
+每个dfs.data.dir目录的结构都是一样的
+
+-current				目录		保存已经提交的Block文件的目录
+-blocksBeingWritten		目录		客户端正在写的Block文件的临时目录
+-tmp					目录		Datanode之间互相复制的临时目录
+storage					文件		记录一些属性值
+in_use.lock				文件		文件锁, 表示此目录已被HDFS集群所使用避免冲突

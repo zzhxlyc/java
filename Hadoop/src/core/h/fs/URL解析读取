@@ -1,0 +1,51 @@
+从一个新的URL读取流, 比如"hdfs://***", 需要一套相关协议机制来支持
+
+java.net.URLStreamHandlerFactory
+	+createURLSteamHander(String protocal) URLStreamHandler
+			|
+			|
+	hadoop.fs.FsUrlStreamHandlerFactory
+	
+java.net.URLStreamHandler
+	+openConnection(URL url); URLConnection
+			|
+			|
+	hadoop.fs.FsUrlStreamHandler
+
+java.net.URLConnection
+	+connect()
+	+getInputStream(); InputStream
+			|
+			|
+	hadoop.fs.FsUrlConnection
+
+	
+1.通过URL.setURLStreamHandlerFactory(URLStreamHandlerFactory factory)安装协议处理工厂
+	工厂只能安装一个
+2.new URL("hdfs://***").openStream()	即可实现
+
+在Hadoop中, 
+FsUrlStreamHandlerFactory的createURLStreamHandler()查看协议是否支持, 
+	若支持返回FsUrlStreamHandler, 不支持返回null交给VM处理
+
+FsUrlStreamHandler的openConnection()直接就是new出FsUrlConnection
+
+FsUrlConnection将打开文件流的任务交给抽象文件系统FileSystem的get()方法交给具体文件系统处理
+	@Override
+	public void connect() throws IOException {
+		try {
+			FileSystem fs = FileSystem.get(url.toURI(), conf);
+			is = fs.open(new Path(url.getPath()));
+		} catch (URISyntaxException e) {
+			throw new IOException(e.toString());
+		}
+	}
+
+	@Override
+	public InputStream getInputStream() throws IOException {
+		if (is == null) {
+			connect();
+		}
+		return is;
+	}
+	

@@ -1,0 +1,18 @@
+Object
+	Configured
+		FileSystem
+			DistributedFileSystem
+			FilterFileSystem
+				ChecksumFileSystem
+					CheckDistributedFileSystem
+					InMemoryFileSystem
+					LocalFileSystem		带Checksum
+				HarFileSystem
+			FTPFileSystem
+			HftpFileSystem
+				HsftpFileSystem
+			KosmosFileSystem
+			NativeS3FileSystem
+			S3FileSystem
+			RawInMemoryFileSystem
+			RawLocalFileSystem			不带Checksum

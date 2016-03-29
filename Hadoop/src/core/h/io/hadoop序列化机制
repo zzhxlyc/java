@@ -1,0 +1,16 @@
+java内置序列化机制，见Jdk/src/j.io.stream/java内置序列化机制
+
+Hadoop序列化机制
+
+hadoop将序列化机制从Object{Output/Input}Steam这2个类分散到了所有需要被系列化的类里, 其实质就只是每个类
+用Data{Output/Input}Stream自己来写自己的序列化, 可以简单到只把所有fields按顺序序列化即可。
+
+这样产生的数据量是极小的（可以做到理论上最小）, 效率极高, 这样才适合用来处理TB/PB的数据, MapReduce才会快。
+另一个好处是, 因为序列化的工作在instance中进行, 可是复用这个instance本身, 不用每次都新建instance
+例如：
+	Writable block = new Block();
+	DataInput in = new DataInputStream( some );
+	while( some ){
+		block.readFields(in);	//复用block类本身, 只是数据重新装载
+		ArrayList.add(block.clone());	//即使需要每个备份, clone()比new()轻量多
+	}
